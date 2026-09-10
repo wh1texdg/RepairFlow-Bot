@@ -150,6 +150,11 @@ async def budget(message: Message, state: FSMContext):
     if value < 0:
         await message.answer("Бюджет не может быть отрицательным.")
         return
+    if value > Decimal("999999999999.99"):
+        await message.answer(
+            "Слишком большой бюджет. Введите сумму меньше 1 трлн ₽."
+        )
+        return
     await state.update_data(budget=str(value))
     await state.set_state(RequestForm.start_date)
     await message.answer("Когда хотите начать ремонт? Формат: ДД.ММ.ГГГГ")
