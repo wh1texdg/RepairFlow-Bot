@@ -109,16 +109,36 @@ async def area(message: Message, state: FSMContext):
         await message.answer("Площадь должна быть больше 0 и не больше 10000 м².")
         return
     await state.update_data(area=str(value))
-    await state.set_state(RequestForm.location)
-    await message.answer("Напишите город и адрес.")
+    await state.set_state(RequestForm.city)
+    await message.answer("В каком городе находится объект?")
 
 
-@router.message(RequestForm.location)
-async def location(message: Message, state: FSMContext):
-    await state.update_data(location=message.text.strip())
+@router.message(RequestForm.city)
+async def city(message: Message, state: FSMContext):
+    value = (message.text or "").strip()
+
+    if len(value) < 2:
+        await message.answer("Введите название города.")
+        return
+
+    await state.update_data(city=value)
+    await state.set_state(RequestForm.address)
+    await message.answer("Теперь укажите адрес объекта.")
+
+
+@router.message(RequestForm.address)
+async def address(message: Message, state: FSMContext):
+    value = (message.text or "").strip()
+
+    if len(value) < 3:
+        await message.answer("Введите адрес объекта подробнее.")
+        return
+
+    await state.update_data(address=value)
     await state.set_state(RequestForm.budget)
-    await message.answer("Укажите бюджет в рублях. Если бюджет неизвестен — напишите 0.")
-
+    await message.answer(
+        "Укажите бюджет в рублях. Если бюджет неизвестен — напишите 0."
+    )
 
 @router.message(RequestForm.budget)
 async def budget(message: Message, state: FSMContext):
@@ -178,7 +198,8 @@ async def phone(message: Message, state: FSMContext):
         f"Ремонт: {REPAIR_LABELS.get(data['repair_type'], data['repair_type'])}\n"
         f"Площадь: {data['area']} м²\n"
         f"Город: {city.strip()}\n"
-        f"Адрес: {address.strip()}\n"
+        f"Город: {data['city']}\n"
+        f"Адрес: {data['address']}\n"
         f"Бюджет: {data['budget']} ₽\n"
         f"Начало: {data['start_date']}\n"
         f"Имя: {data['name']}\n"
@@ -221,11 +242,11 @@ async def confirm_request(callback: CallbackQuery, state: FSMContext):
             object_type=data["object_type"],
             repair_type=data["repair_type"],
             area=Decimal(data["area"]),
-            city=city.strip(),
-            address=address.strip() or city.strip(),
+            city=data["city"],
+            address=data["address"],
             budget=Decimal(data["budget"]),
             desired_start_date=date.fromisoformat(data["start_date"]),
-        )
+        )       
 
         sheets = GoogleSheetsService(settings.google_credentials_dict, settings.google_sheet_id)
         try:
