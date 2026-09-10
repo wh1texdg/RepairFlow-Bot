@@ -191,7 +191,8 @@ async def phone(message: Message, state: FSMContext):
     await state.set_state(RequestForm.confirmation)
 
     data = await state.get_data()
-    city, _, address = data["location"].partition(",")
+    city = data["city"]
+    address = data["address"]
     summary = (
         "Проверьте заявку:\n\n"
         f"Объект: {OBJECT_LABELS.get(data['object_type'], data['object_type'])}\n"
