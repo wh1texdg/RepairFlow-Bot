@@ -138,13 +138,16 @@ async def budget(message: Message, state: FSMContext):
 @router.message(RequestForm.start_date)
 async def start_date(message: Message, state: FSMContext):
     try:
-        value = date.fromisoformat(".".join(reversed(message.text.strip().split("."))))
+        day, month, year = map(int, message.text.strip().split("."))
+        value = date(year, month, day)
     except (ValueError, AttributeError):
         await message.answer("Введите дату в формате ДД.ММ.ГГГГ.")
         return
+
     if value < date.today():
         await message.answer("Дата начала не может быть в прошлом.")
         return
+
     await state.update_data(start_date=value.isoformat())
     await state.set_state(RequestForm.name)
     await message.answer("Как вас зовут?")
