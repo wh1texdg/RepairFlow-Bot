@@ -226,7 +226,8 @@ async def confirm_back(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(RequestForm.confirmation, F.data == "request:confirm")
 async def confirm_request(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    city, _, address = data["location"].partition(",")
+    city = data["city"]
+    address = data["address"]
 
     async with AsyncSessionLocal() as session:
         user_service = UserService(session)
